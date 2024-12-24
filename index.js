@@ -20,6 +20,12 @@ let statusData = {
     commitName: 'Initial commit',
     committer: 'Alice'
 };
+app.use((req, res, next) => {
+    if (req.headers['x-forwarded-proto'] !== 'https') {
+        return res.redirect('https://' + req.headers.host + req.url);
+    }
+    next();
+});
 
 // Serve the status API
 app.get('/status', (req, res) => {
