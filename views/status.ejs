@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Actions Status</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .status {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .up {
+            color: green;
+        }
+        .down {
+            color: red;
+        }
+        .message {
+            font-size: 16px;
+        }
+        /* Progress bar styles */
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f3f3f3;
+            border-radius: 5px;
+        }
+        .progress-bar span {
+            display: block;
+            height: 100%;
+            border-radius: 5px;
+        }
+        .building {
+            background-color: orange;
+            width: 25%; /* Change this based on step */
+        }
+        .deploying {
+            background-color: blue;
+            width: 50%; /* Change this based on step */
+        }
+        .restarting {
+            background-color: yellow;
+            width: 75%; /* Change this based on step */
+        }
+        .done {
+            background-color: green;
+            width: 100%; /* Change this based on step */
+        }
+    </style>
+</head>
+<body>
+    <h1>GitHub Actions Deployment Status</h1>
+    <!-- Dynamic Status message -->
+    <div class="status <%= status %>" id="status"><%= message %></div>
+    <p class="message" id="message"><%= message %></p>
+    <p>Last updated: <span id="lastChecked"><%= lastChecked || 'N/A' %></span></p>
+
+    <!-- Progress bar -->
+    <div class="progress-bar">
+        <span class="<%= status.toLowerCase() %>"></span>
+    </div>
+
+    <script>
+        function updateStatus() {
+            fetch('<%= apiUrl %>')  <!-- Dynamic URL from EJS -->
+                .then(response => response.json())
+                .then(data => {
+                    const status = data.status;
+                    const message = data.message;
+                    const lastChecked = data.lastUpdated;
+
+                    // Dynamically update the status, message, and last updated time
+                    document.getElementById('status').className = status;  // Change the class to match status (up, down, etc.)
+                    document.getElementById('status').innerText = message; // Update the message on the page
+                    document.getElementById('lastChecked').innerText = lastChecked; // Update the last checked time
+                    document.getElementById('message').innerText = message; // Same for the message
+
+                    // Dynamically update progress bar based on status
+                    document.querySelector('.progress-bar span').className = status.toLowerCase();
+                })
+                .catch(error => {
+                    console.error('Error fetching status:', error);
+                    document.getElementById('status').className = 'down';
+                    document.getElementById('status').innerText = 'Error loading status';
+                    document.getElementById('message').innerText = 'There was an issue fetching the status.';
+                });
+        }
+
+        // Set an interval to update the status every 60 seconds (60000ms)
+        setInterval(updateStatus, 60000);  // Update every 60 seconds
+
+        // Initial call to set status immediately on page load
+        updateStatus();
+    </script>
+</body>
+</html>
